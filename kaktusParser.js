@@ -79,7 +79,7 @@ async function send(url){
     let body = await getArticleBody(url);
     let title = await getArticleTheme(url);
     let token = await getArticleImages(url);
-    let result = await parser.send(1178, title, body, [token]);
+    let result = await parser.send(1179, title, body, [token]);
     console.log(result)
 }
 let dataName = 'kaktus_test';
