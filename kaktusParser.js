@@ -73,7 +73,6 @@ async function getUrlList(){
     });
 }
 
-let url = 'http://kaktus.media/doc/361394_vokryg_aziia_moll_prosiat_posadit_novye_derevia_vmesto_sryblennyh.html';
 
 async function send(url){
     let body = await getArticleBody(url);
