@@ -12,7 +12,7 @@ async function getArticleBody(html){
     return new Promise((resolve, reject)=>{
         x(html, '#topic', ['.topic-text p'])((error, textList)=>{
             if(!error){
-                resolve(textList.join(' '))
+                resolve(textList.join('\n'))
             }
             reject(error)
         })
