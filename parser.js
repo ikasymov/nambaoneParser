@@ -1,5 +1,7 @@
 let nambaone = 'https://api.namba1.co';
 let request = require('request');
+let superagent = require('superagent');
+let fs = require('fs');
 async function getDateTime() {
 
     let date = new Date();
@@ -69,14 +71,36 @@ async function sendArticle(groupId, title, body, imgList){
     return new Promise((resolve, reject)=>{
         request(dataForSend, (error, req, body)=>{
             if(error || req.statusCode === 404){
-                reject(error || new Error('not page found'))
+                reject(error || new Error('not page found'));
             }
-            resolve(req.statusCode)
-        })
-    })
+            resolve(req.statusCode);
+        });
+    });
 }
 
 
-module.exports = sendArticle;
-module.exports = generateToken;
-module.exports = getDateTime;
+async function saveImageEndReturnToken(imgUrl){
+    let value = Math.random();
+    return new Promise((resolve, reject)=>{
+        if (imgUrl){
+            request(imgUrl).pipe(fs.createWriteStream('./' + 'kp' +  value + imgUrl.slice(-4))).on('finish', function (error, req) {
+                if (error){
+                    reject(error);
+                }
+                superagent.post('https://files.namba1.co').attach('file', './' + 'kp' +  value + imgUrl.slice(-4)).end(function(err, req) {
+                    fs.unlink('./' + 'kp' +  value + imgUrl.slice(-4), function (error, value) {});
+                    resolve(req.body.file);
+                });
+            });
+        }
+        else{
+            resolve(imgUrl)
+        }
+    });
+}
+
+
+module.exports.send = sendArticle;
+module.exports.token = generateToken;
+module.exports.date = getDateTime;
+module.exports.getImageToken = saveImageEndReturnToken;
