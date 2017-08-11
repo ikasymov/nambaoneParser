@@ -5,4 +5,4 @@ let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f
 
 // client.set('azattyk_test_ru', 'https://rus.azattyk.org/a/28670707.html')
 // client.set('kloop_test_ru', 'https://kloop.kg/blog/2017/08/11/storonniki-tekebaeva-prekratili-golodovku-iz-za-nedopuska-politika-k-sdache-testa-po-gosyazyku/')
-client.set('saat_test', 'http://saat.kg/2017/ala-buka-rajonunun-azhek-ajylyndagy-55-turak-zhaj-sel-korkunuchunan-korgoldu/');
+client.set('knews_test', 'http://knews.kg/2017/08/sooronbaj-zheenbekov-sdal-podpisnye-listy-v-tsik/');
