@@ -4,4 +4,4 @@
 let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
 
 // client.set('azattyk_test_ru', 'https://rus.azattyk.org/a/28670707.html')
-client.set('imndeit_test', 'http://lmndeit.kg/2017/05/13/minsk/')
+client.set('kyrtag_test', 'http://kyrtag.kg/society/v-kyrgyzstane-zaderzhan-terrorist-planirovavshiy-organizovat-kanal-perepravki-grazhdan-v-zony-konfli/')
