@@ -46,9 +46,13 @@ async function getArticleImages(url){
     return new Promise((resolve, reject)=>{
         x(html, '.content', '.v-news-detail.inner-news.v-news-detail-page img@src')((error, imgList)=>{
             if(!error){
-                let index = imgList.indexOf('?')
-                if(index !== -1){
-                    resolve('http://' + imgList.slice(0, index).slice(2))
+                if(imgList !== undefined){
+                    let index = imgList.indexOf('?')
+                    if(index !== -1){
+                        resolve('http://' + imgList.slice(0, index).slice(2))
+                    }
+                }else{
+                    resolve(false)
                 }
             }
             reject(error)
@@ -56,19 +60,18 @@ async function getArticleImages(url){
     });
 }
 
-async function send(url){
+async function send(url, group){
     let body = await getArticleBody(url);
     let title = await getArticleTheme(url);
     let img = await getArticleImages(url);
     let token = await parser.getImageToken(img);
-    let result = await parser.send(1183, title, body, [token]);
+    let result = await parser.send(group, title, body, [token]);
     console.log(result)
 }
 
-let urlForParseUrls = 'http://kyrtag.kg/';
-async function getUrlList(){
+async function getUrlList(url, element){
     return new Promise((resolve , reject)=>{
-        x(urlForParseUrls, '.news-list ul', ['li .v-news-head .v-news-info.with-image h3 a@href'])((error, urlList)=>{
+        x(url, '.news-list ul', ['li .v-news-head .v-news-info ' + element + ' a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
@@ -77,16 +80,16 @@ async function getUrlList(){
     });
 }
 
-let dataName = 'kyrtag_test';
 
-async function start(){
-    let list = await getUrlList();
+
+async function start(dataName, group, url, element){
+    let list = await getUrlList(url, element);
     let urlList = list.reverse();
     client.get(dataName, (error, value)=>{
         let cutList = urlList.slice(urlList.indexOf(value) + 1);
         if(cutList.length > 0){
             cutList.forEach((elem)=>{
-                send(elem)
+                send(elem, group)
             });
             client.set(dataName, cutList.slice(-1)[0])
         }else{
@@ -94,4 +97,12 @@ async function start(){
         }
     });
 }
-start();
+let urlForParseUrlsRu = 'http://kyrtag.kg/';
+let urlForParseUrlsKG = 'http://kyrtag.kg/kg';
+let urlForParseUrlsEn = 'http://kyrtag.kg/en';
+let dataNameRu = 'kyrtag_test_ru';
+let dataNameKG = 'kyrtag_test_kg';
+let dataNameEn = 'kyrtag_test_en';
+start(dataNameRu, 1183, urlForParseUrlsRu, 'h3');
+start(dataNameEn, 1185, urlForParseUrlsEn, 'h2');
+start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
