@@ -10,7 +10,7 @@ let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
         let data = {
-            url: url,
+            url:url,
             method: 'GET'
         };
         request(data, (error, req, body)=>{
@@ -20,21 +20,15 @@ async function getArticleHtml(url){
             resolve(body)
         })
     })
-
 }
-
 async function getArticleBody(url){
     let html = await getArticleHtml(url);
     return new Promise((resolve, reject)=>{
-        x(html, '#single', ['.row.collapse .entry-content p'])((error, textList)=>{
-            if(!error){
-                resolve(textList.join('\n'))
-            }
-            reject(error)
+        x(html, 'article', ['.entry-content'])((error, textList)=>{
+            resolve(textList.join('\n').trim())
         })
-    })
+    });
 }
-
 async function getArticleTheme(url){
     return new Promise((resolve, reject)=>{
         x(url, 'title')((error, title)=>{
@@ -43,19 +37,18 @@ async function getArticleTheme(url){
             }
             reject(error)
         })
-    })
+    });
 }
-
 async function getListOfUrls(url){
     let html = await getArticleHtml(url);
     return new Promise((resolve, reject)=>{
-        x(html, '#single', ['.row.collapse .entry-content img@src'])((error, textList)=>{
+        x(html, 'article', ['.entry-content img@src'])((error, imgList)=>{
             if(!error){
-                resolve(textList)
+                resolve(imgList)
             }
             reject(error)
         })
-    })
+    });
 }
 
 async function getArticleImages(url){
@@ -68,10 +61,9 @@ async function getArticleImages(url){
 }
 
 
-let urlForParseUrlList = 'http://lmndeit.kg/';
-async function getUrlList(){
+async function getUrlList(url){
     return new Promise((resolve, reject)=>{
-        x(urlForParseUrlList, '#dpe_fp_widget-3', ['.recent-widget .block-inner a@href'])((error, urlList)=>{
+        x(url, '#main .home_page ul', ['li .home-post-title a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
@@ -79,16 +71,23 @@ async function getUrlList(){
         })
     })
 }
+
+
 async function send(url){
     let body = await getArticleBody(url);
-    let title = await getArticleTheme(url);
-    let token = await getArticleImages(url);
-    let result = await parser.send(1182, title, body, token);
-    console.log(result)
+    if(body.trim()){
+        let title = await getArticleTheme(url);
+        let token = await getArticleImages(url);
+        let result = await parser.send(1190, title, body, token);
+        console.log(result)
+    }else{
+        console.log('not body content')
+    }
 }
-let dataName = 'imndeit_test';
+let dataName = 'kurut_test';
+let urlForParserUrlList = 'http://kurut.kg/';
 async function start(){
-    let list = await getUrlList();
+    let list = await getUrlList(urlForParserUrlList);
     let urlList = list.reverse();
     client.get(dataName, (error, value)=>{
         let cutList = urlList.slice(urlList.indexOf(value) + 1);
