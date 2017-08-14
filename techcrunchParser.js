@@ -8,7 +8,7 @@ let data = {
     bodyPath2: ['#speakable-summary'],
     imgPath1: '.l-main-container',
     imgPath2: ['.article-entry.text img@src'],
-    group: 1159,
+    group: 1193,
     dataName: 'techcrunch_test'
 };
 
