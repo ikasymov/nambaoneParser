@@ -85,10 +85,10 @@ Parser.prototype.getArticleBody = async function(){
     let html = await this.getArticleHtml();
     return new Promise((resolve, reject)=>{
         x(html, this.bodyPath1, this.bodyPath2)((error, textList)=>{
-            if(!error){
+            if(!error && textList.length > 0){
                 resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + this.site)
             }
-            reject(error)
+            reject(error || 'not body')
         })
     })
 };
@@ -148,14 +148,15 @@ Parser.prototype.saveImageEndReturnToken = async function(imgUrl){
 };
 
 Parser.prototype.send = async function(){
-    let body = await this.getArticleBody();
-    if(body.trim()){
+    try{
+        let body = await this.getArticleBody();
         let title = await this.getArticleTheme();
         let token = await this.getArticleImages();
         return await this.sendArticle(body, title, token);
-    }else{
-        return 'not body content'
+    }catch(e){
+        console.log(e)
     }
+
 };
 
 Parser.prototype.getArticleImages = async function(){
