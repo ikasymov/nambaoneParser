@@ -8,7 +8,7 @@ let data = {
     bodyPath2: ['.display p'],
     imgPath1: '.post-text',
     imgPath2: ['.image_block img@src'],
-    group: 1159,
+    group: 1192,
     dataName: 'esquire_test'
 };
 
