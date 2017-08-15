@@ -25,13 +25,13 @@ let dataKG = {
 
 async function getUrlList(url){
     return new Promise((resolve, reject)=>{
-        x(url, '.place-js', ['.c1.drm a.newsItem__imgBlock@href'])((error, urlList)=>{
+        x(url, '#ordinaryItems', ['li .content a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
             reject(error)
         })
-    })
+    });
 }
 
 async function start(data, url){
