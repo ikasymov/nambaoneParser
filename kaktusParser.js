@@ -4,34 +4,21 @@ let x = Xray();
 let xpath = require('xpath')
     , dom = require('xmldom').DOMParser;
 let request = require('request');
+let scrape = require('html-metadata');
 let ch = require('cheerio');
 let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
 
-async function getArticleBody(html){
+async function getArticleBody(url){
     return new Promise((resolve, reject)=>{
-        x(html, '#topic', ['.topic-text p'])((error, textList)=>{
+        x(url, '#topic', ['.topic-text p'])((error, textList)=>{
             if(!error){
-                resolve(textList.join('\n'))
+                resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
             }
             reject(error)
         })
     });
 };
 
-async function getArticleHtml(url){
-    return new Promise((resolve, reject)=>{
-        let data = {
-            url: url,
-            method: 'POST'
-        };
-        request(data, (error, req, body)=>{
-            if(error || req.statusCode === 404){
-                reject(error, new Error('page not found'))
-            }
-            resolve(body);
-        });
-    });
-}
 
 async function getArticleTheme(url){
     return new Promise((resolve, reject)=>{
@@ -45,19 +32,8 @@ async function getArticleTheme(url){
 }
 
 async function getArticleImages(url){
-    let html = await getArticleHtml(url);
-    return new Promise((resolve, reject)=>{
-        x(html, '.topic', ['script'])((error, imgList)=>{
-            if(!error || error === null){
-                let url = JSON.parse(imgList[1].slice(14, -1)).media.image[0].media_name.original;
-                parser.getImageToken(url).then(token=>{
-                    resolve(token)
-                })
-            }else{
-                reject(error)
-            }
-        })
-    })
+    let dict = await scrape(url);
+    return await parser.getImageToken(dict.twitter.image.src)
 }
 
 async function getUrlList(){
