@@ -1,67 +1,31 @@
-let parser = require('./parser');
+let Parser = require('./universalParser');
+let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
 let Xray = require('x-ray');
 let x = Xray();
-let xpath = require('xpath')
-    , dom = require('xmldom').DOMParser;
-let request = require('request');
-let ch = require('cheerio');
-let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
+let data = {
+    site: 'http://www.elle.ru/celebrities/novosty/smi-ravshana-kurkova-vyishla-zamuj/',
+    bodyPath1: '.content',
+    bodyPath2: '',
+    imgPath1: '.content',
+    imgPath2: ['img@src'],
+    group: 1191,
+    dataName: 'habra_test'
+};
 
-async function getArticleHtml(url){
+Parser.prototype.getArticleBody = async function(){
+    let html = await this.getArticleHtml();
     return new Promise((resolve, reject)=>{
-        let data = {
-            url:url,
-            method: 'GET'
-        };
-        request(data, (error, req, body)=>{
-            if(error || req.statusCode === 404){
-                reject(error || new Error('page not found'))
+        x(html, this.bodyPath1)((error, textList)=>{
+            if(!error && textList.length > 0){
+                resolve(textList.slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + this.site)
             }
-            resolve(body)
+            reject(error || 'not body')
         })
     })
-}
-async function getArticleBody(url){
-    let html = await getArticleHtml(url);
-    return new Promise((resolve, reject)=>{
-        x(html, '.content')((error, textList)=>{
-            resolve(textList.trim())
-        })
-    });
-}
-async function getArticleTheme(url){
-    return new Promise((resolve, reject)=>{
-        x(url, 'title')((error, title)=>{
-            if(!error){
-                resolve(title)
-            }
-            reject(error)
-        })
-    });
-}
-async function getListOfUrls(url){
-    let html = await getArticleHtml(url);
-    return new Promise((resolve, reject)=>{
-        x(html, '.content', ['img@src'])((error, imgList)=>{
-            if(!error){
-                resolve(imgList)
-            }
-            reject(error)
-        })
-    });
-}
+};
 
-async function getArticleImages(url){
-    let token = [];
-    let urls = await getListOfUrls(url);
-    for(let i in urls){
-        token.push(await parser.getImageToken(urls[i]))
-    }
-    return token
-}
-
-//
-async function getUrlList(url){
+let url = 'https://habrahabr.ru/all/';
+async function getUrlList(){
     return new Promise((resolve, reject)=>{
         x(url, '.posts_list', ['.post__body.post__body_crop .buttons a@href'])((error, urlList)=>{
             if(!error){
@@ -72,32 +36,26 @@ async function getUrlList(url){
     })
 }
 
-async function send(url){
-    let body = await getArticleBody(url);
-    if(body.trim()){
-        let title = await getArticleTheme(url);
-        let token = await getArticleImages(url);
-        let result = await parser.send(1191, title, body, token);
-        console.log(result)
-    }else{
-        console.log('not body content')
-    }
-}
-let dataName = 'habra_test';
-let urlForParserUrlList = 'https://habrahabr.ru/all/';
+
 async function start(){
-    let list = await getUrlList(urlForParserUrlList);
+
+    let list = await getUrlList();
     let urlList = list.reverse();
-    client.get(dataName, (error, value)=>{
+    client.get(data.dataName, (error, value)=>{
         let cutList = urlList.slice(urlList.indexOf(value) + 1);
         if(cutList.length > 0){
             cutList.forEach((elem)=>{
-                send(elem)
+                data.site = elem;
+                let siteParser = new Parser(data);
+                siteParser.send().then(result=>{
+                    console.log(result)
+                })
             });
-            client.set(dataName, cutList.slice(-1)[0])
+            client.set(data.dataName, cutList.slice(-1)[0])
         }else{
             console.log('Not List')
         }
     });
+
 }
 start();
