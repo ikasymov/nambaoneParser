@@ -28,7 +28,7 @@ async function getArticleBody(url){
     contentHtml.first().remove();
     contentHtml.remove('.news-tags');
     let text = $('.content .v-news-detail.inner-news.v-news-detail-page').text()
-    return text.trim()
+    return text.trim().slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url
 }
 async function getArticleTheme(url){
     return new Promise((resolve, reject)=>{

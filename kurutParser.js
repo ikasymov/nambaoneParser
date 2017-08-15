@@ -25,7 +25,7 @@ async function getArticleBody(url){
     let html = await getArticleHtml(url);
     return new Promise((resolve, reject)=>{
         x(html, 'article', ['.entry-content'])((error, textList)=>{
-            resolve(textList.join('\n').trim())
+            resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
         })
     });
 }
