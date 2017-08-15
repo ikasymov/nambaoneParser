@@ -6,16 +6,30 @@ let data = {
     site: 'http://www.eurosport.ru/football/italian-super-coppa/2017-2018/story_sto6288204.shtml',
     bodyPath1: '.storyfull__content',
     bodyPath2: ['.storyfull__paragraphs p'],
-    imgPath1: '.storyfull__content',
-    imgPath2: ['.storyfull__paragraphs img@src'],
+    imgPath1: 'head',
+    imgPath2: 'script',
     group: 1195,
     dataName: 'eurosport_football_test'
 };
 
-let url = 'http://www.eurosport.ru/football/';
+Parser.prototype.getListOfUrls = async function(){
+    let html = await this.getArticleHtml();
+    return new Promise((resolve, reject)=>{
+        x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
+            if(!error){
+                let imgJson = JSON.parse(imgList);
+                resolve([imgJson.image.url])
+            }
+            reject(error)
+        })
+    });
+};
+
+
+let url = 'http://www.eurosport.ru/football';
 async function getUrlList(){
     return new Promise((resolve, reject)=>{
-        x(url, '#navtab_storylist_featured', ['.storylist-container .module.module-headline.std .storylist-container__main-title a@href'])((error, urlList)=>{
+        x(url, '.storylist-latest-content', ['.storylist-latest__picture a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }

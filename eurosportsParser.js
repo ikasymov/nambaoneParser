@@ -3,18 +3,33 @@ let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f
 let Xray = require('x-ray');
 let x = Xray();
 let data = {
-    site: 'http://www.eurosport.ru/triathlon/story_sto6288410.shtml',
+    site: 'http://www.eurosport.ru/tennis/atp-cincinnati/2017/story_sto6288975.shtml',
     bodyPath1: '.storyfull__content',
     bodyPath2: ['.storyfull__paragraphs p'],
-    imgPath1: '.storyfull__content',
-    imgPath2: ['.storyfull__paragraphs img@src'],
+    imgPath1: 'head',
+    imgPath2: 'script',
     group: 1194,
     dataName: 'eurosport_test'
 };
+
+Parser.prototype.getListOfUrls = async function(){
+    let html = await this.getArticleHtml();
+    return new Promise((resolve, reject)=>{
+        x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
+            if(!error){
+                let imgJson = JSON.parse(imgList);
+                resolve([imgJson.image.url])
+            }
+            reject(error)
+        })
+    });
+};
+
+
 let url = 'http://www.eurosport.ru/';
 async function getUrlList(){
     return new Promise((resolve, reject)=>{
-        x(url, '#navtab_storylist_featured', ['.storylist-container .module.module-headline.std .storylist-container__main-title a@href'])((error, urlList)=>{
+        x(url, '.storylist-latest-content', ['.storylist-latest__picture a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
@@ -29,7 +44,6 @@ async function start(){
     let urlList = list.reverse();
     client.get(data.dataName, (error, value)=>{
         let cutList = urlList.slice(urlList.indexOf(value) + 1);
-        console.log(cutList)
         if(cutList.length > 0){
             cutList.forEach((elem)=>{
                 data.site = elem;
