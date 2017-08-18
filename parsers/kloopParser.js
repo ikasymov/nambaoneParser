@@ -1,12 +1,8 @@
-let parser = require('./parser');
+let parser = require('../parser');
 let Xray = require('x-ray');
 let x = Xray();
-let xpath = require('xpath')
-    , dom = require('xmldom').DOMParser;
 let request = require('request');
-let ch = require('cheerio');
-let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
-
+let db = require('../models');
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
         let data = {
@@ -24,7 +20,7 @@ async function getArticleHtml(url){
 async function getArticleBody(url){
     let html = await getArticleHtml(url);
     return new Promise((resolve, reject)=>{
-        x(html, 'article', ['.td-post-content p'])((error, textList)=>{
+        x(html, '.td-post-content', ['p'])((error, textList)=>{
             resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
         })
     });
@@ -43,7 +39,7 @@ async function getArticleTheme(url){
 async function getArticleImages(url){
     let html = await getArticleHtml(url);
     return new Promise((resolve, reject)=>{
-        x(html, 'article', '.td-post-content .td-post-featured-image img@src')((error, imgList)=>{
+        x(html, '.td-post-featured-image', 'img@src')((error, imgList)=>{
             if(!error){
                 resolve(imgList)
             }
@@ -51,10 +47,9 @@ async function getArticleImages(url){
         })
     });
 }
-let url = 'http://knews.kg/';
-async function getUrlList(){
+async function getUrlList(url){
     return new Promise((resolve, reject)=>{
-        x(url, '.lenta .wpb_wrapper', ['.td_block_wrap .td_block_inner h3 a@href'])((error, urlList)=>{
+        x(url, '.wpb_wrapper', ['.td_block_wrap .td_block_inner .td-module-thumb a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
@@ -63,29 +58,49 @@ async function getUrlList(){
     })
 }
 
-
-async function send(url){
+async function send(url, group){
     let body = await getArticleBody(url);
     let title = await getArticleTheme(url);
     let img = await getArticleImages(url);
-    let token = await parser.getImageToken(img)
-    let result = await parser.send(1189, title, body, [token]);
-    console.log(result)
+    let token = await parser.getImageToken(img);
+    return parser.send(group, title, body, [token]);
 }
-let dataName = 'knews_test';
-async function start(){
-    let list = await getUrlList();
+
+async function start(dataName, group, url){
+    let list = await getUrlList(url);
     let urlList = list.reverse();
-    client.get(dataName, (error, value)=>{
-        let cutList = urlList.slice(urlList.indexOf(value) + 1);
-        if(cutList.length > 0){
-            cutList.forEach((elem)=>{
-                send(elem)
-            });
-            client.set(dataName, cutList.slice(-1)[0])
-        }else{
-            console.log('Not List')
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: dataName
+        },
+        defaults: {
+            key: dataName,
+            value: urlList[0]
         }
     });
+    let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+    if(cutList.length > 0){
+        for(let i in cutList){
+            let elem = cutList[i];
+            let result = await send(elem, group);
+            console.log(result)
+        }
+        await value[0].update({value: cutList.slice(-1)[0]});
+        return 'OK'
+    }else{
+        console.log('Not List')
+    }
 }
-start();
+
+async function startParser(){
+    let urlForParseUrlsRu = 'https://kloop.kg/news/';
+    let urlForParseUrlsKG = 'http://ky.kloop.asia/news/';
+    let dataNameRu = 'kloop_test_ru';
+    let dataNameKG = 'kloop_test_kg';
+    let ru = await start(dataNameRu, 1186, urlForParseUrlsRu);
+    let kg = await start(dataNameKG, 1187, urlForParseUrlsKG);
+    return ru + '|' + kg
+
+}
+
+module.exports.startpars = startParser;

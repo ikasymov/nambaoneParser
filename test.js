@@ -1,10 +1,49 @@
-/**
- * Created by ilgizkasymov on 8/10/17.
- */
-let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
+let db = require('./models');
 
-// client.set('azattyk_test_ru', 'https://rus.azattyk.org/a/28670707.html')
-client.set('kaktus_test', 'http://kaktus.media/doc/361627_v_indii_zaderjali_chetyreh_chelovek_iz_za_ytechki_serii_igry_prestolov.html');
-// client.get('kyrtag_test_kg', (error, value)=>{
-//     console.log(value)
+let async  = require('async');
+// db.Parser.update({value: 'https://rus.azattyk.org/a/28681576.html'}).then(value=>{
+//     console.log(value.value)
 // });
+// db.Parser.update({value: 'https://www.azattyk.org/a/28681416.html', where:{
+//     key: 'azattyk_test_kg'
+// }}).then(value=>{
+//     console.log(value.value)
+// })
+// db.Parser.findOrCreate({
+//     where: {
+//         key: 'elsebek'
+//     },
+//     defaults: {
+//         key: 'elsebek',
+//         value: 'http://stylish.kg/blog/kartina-iz-ayrana-iskusstvo-bez-granic-kyrgyzskogo-hudozhnika'
+//     }
+// }).then(value=>{
+//     console.log(value[0].key)
+// })
+// let data = {
+//     a: 'asdf',
+//     b: 'sdfasdf'
+// };
+// let a = [1, 2, 3, 4, 5, 6];
+//
+// async function logic(elem, data, callback){
+//     callback(elem)
+// }
+//
+// async.map(a, (item, callback)=>{
+//     return logic(item, data, callback)
+// }, (error, result)=>{
+//     console.log(error)
+//     console.log(result)
+// })
+db.Parser.findOne({where: {
+    key: 'habra_test'
+}}).then(parser=>{
+    parser.update({value: 'https://habrahabr.ru/company/spbau/blog/335884/'})
+})
+
+// db.Parser.findOne({where: {
+//     key: 'azattyk_test_kg'
+// }}).then(parser=>{
+//     parser.update({value: 'https://www.azattyk.org/a/28681416.html'})
+// })

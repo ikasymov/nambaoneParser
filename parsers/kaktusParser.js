@@ -1,4 +1,4 @@
-let parser = require('./parser');
+let parser = require('../parser');
 let Xray = require('x-ray');
 let x = Xray();
 let xpath = require('xpath')
@@ -6,7 +6,8 @@ let xpath = require('xpath')
 let request = require('request');
 let scrape = require('html-metadata');
 let ch = require('cheerio');
-let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
+let db = require('../models');
+let startanother = require('../parser').startanother;
 
 async function getArticleBody(url){
     return new Promise((resolve, reject)=>{
@@ -41,7 +42,7 @@ async function getUrlList(){
     return new Promise((resolve, reject)=>{
         x('http://kaktus.media/?date=' + date + '&lable=8&order=time', '.block_content .cat_content ul ', ['li .t a@href'])((error, urlList)=>{
             if(!error){
-                resolve(urlList)
+                resolve(urlList.reverse())
             }
             reject(error)
         })
@@ -50,25 +51,25 @@ async function getUrlList(){
 
 
 async function send(url){
-    let body = await getArticleBody(url);
-    let title = await getArticleTheme(url);
-    let token = await getArticleImages(url);
-    let result = await parser.send(1179, title, body, [token]);
-    console.log(result)
+    try{
+        let body = await getArticleBody(url);
+        let title = await getArticleTheme(url);
+        let token = await getArticleImages(url);
+        return parser.send(1179, title, body, [token]);
+    }catch(e){
+        console.log(e)
+    }
+
 }
-let dataName = 'kaktus_test';
-async function start(){
-    let urlList = await getUrlList();
-    client.get(dataName, (error, value)=>{
-        let cutList = urlList.slice(urlList.indexOf(value) + 1);
-        if(cutList.length > 0){
-            cutList.forEach((elem)=>{
-                send(elem)
-            });
-            client.set(dataName, cutList.slice(-1)[0])
-        }else{
-            console.log('Not List')
-        }
-    });
+let data = {
+    dataName: 'kaktus_test'
+};
+
+
+async function startParser(){
+    data.urlList = await getUrlList();
+    return startanother(data, send);
 }
-start();
+
+
+module.exports.startpars = startParser;

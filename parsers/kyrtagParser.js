@@ -1,12 +1,9 @@
-let parser = require('./parser');
+let parser = require('../parser');
 let Xray = require('x-ray');
 let x = Xray();
-let xpath = require('xpath')
-    , dom = require('xmldom').DOMParser;
 let request = require('request');
 let ch = require('cheerio');
-let client = require('redis').createClient('redis://h:p8d8e6b778f4b5086a4d4a328f437f873e72bd40522bc0f75c1132a65c213dc3e@ec2-34-231-155-48.compute-1.amazonaws.com:30949');
-
+let db = require('../models');
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
         let data = {
@@ -66,7 +63,7 @@ async function send(url, group){
     let img = await getArticleImages(url);
     let token = await parser.getImageToken(img);
     let result = await parser.send(group, title, body, [token]);
-    console.log(result)
+    return result
 }
 
 async function getUrlList(url, element){
@@ -85,24 +82,40 @@ async function getUrlList(url, element){
 async function start(dataName, group, url, element){
     let list = await getUrlList(url, element);
     let urlList = list.reverse();
-    client.get(dataName, (error, value)=>{
-        let cutList = urlList.slice(urlList.indexOf(value) + 1);
-        if(cutList.length > 0){
-            cutList.forEach((elem)=>{
-                send(elem, group)
-            });
-            client.set(dataName, cutList.slice(-1)[0])
-        }else{
-            console.log('Not List')
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: dataName
+        },
+        defaults: {
+            key: dataName,
+            value: urlList[0]
         }
     });
+    let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+    if(cutList.length > 0){
+        for (let i in cutList){
+            let result = await send(cutList[i], group);
+            console.log(result)
+        }
+        value[0].update({value: cutList.slice(-1)[0]})
+    }else{
+        console.log('Not List')
+    }
+
 }
-let urlForParseUrlsRu = 'http://kyrtag.kg/';
-let urlForParseUrlsKG = 'http://kyrtag.kg/kg';
-let urlForParseUrlsEn = 'http://kyrtag.kg/en';
-let dataNameRu = 'kyrtag_test_ru';
-let dataNameKG = 'kyrtag_test_kg';
-let dataNameEn = 'kyrtag_test_en';
-start(dataNameRu, 1183, urlForParseUrlsRu, 'h3');
-start(dataNameEn, 1185, urlForParseUrlsEn, 'h2');
-start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
+
+
+
+async function startParser(){
+    let urlForParseUrlsRu = 'http://kyrtag.kg/';
+    let urlForParseUrlsKG = 'http://kyrtag.kg/kg';
+    let urlForParseUrlsEn = 'http://kyrtag.kg/en';
+    let dataNameRu = 'kyrtag_test_ru';
+    let dataNameKG = 'kyrtag_test_kg';
+    let dataNameEn = 'kyrtag_test_en';
+    let ru = await start(dataNameRu, 1183, urlForParseUrlsRu, 'h3');
+    let en = await start(dataNameEn, 1185, urlForParseUrlsEn, 'h2');
+    let kg = await start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
+    return ru + '|' + en + '|' + kg
+}
+module.exports.startpars = startParser;

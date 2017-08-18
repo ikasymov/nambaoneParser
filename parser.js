@@ -2,6 +2,9 @@ let nambaone = 'https://api.namba1.co';
 let request = require('request');
 let superagent = require('superagent');
 let fs = require('fs');
+let db = require('./models');
+let async = require('async');
+let Parser = require('./universalParser');
 async function getDateTime() {
 
     let date = new Date();
@@ -32,8 +35,8 @@ async function generateToken(){
         url: nambaone + '/users/auth',
         method: 'POST',
         body: {
-            'phone': process.env.user,
-            'password': process.env.password
+            'phone': '996121121121',
+            'password': 'password112'
         },
         json: true
     };
@@ -99,7 +102,69 @@ async function saveImageEndReturnToken(imgUrl){
     });
 }
 
+async function start(data){
 
+    let list = data.urlList;
+    let urlList = list.reverse();
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: data.dataName
+        },
+        default: {
+            key: data.dataName,
+            value: urlList[0]
+        }
+    });
+    if(value[0].value !== null){
+        let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+
+        if(cutList.length > 0){
+            for (let  i in cutList){
+                let siteParser = new Parser(data, cutList[i]);
+                let result = await siteParser.send();
+                console.log(result)
+            }
+            cutList.forEach((elem)=>{
+
+            });
+            await value[0].update({value: cutList.slice(-1)[0]});
+            return 'OK'
+        }else{
+            console.log('Not List')
+        }
+    }else{
+        value[0].update({value: urlList[0]})
+    }
+
+}
+
+async function startAnother(data, send){
+    let urlList = data.urlList;
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: data.dataName
+        },
+        default: {
+            key: data.dataName,
+            value: urlList[0]
+        }
+    });
+    let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+    if(cutList.length > 0){
+        for (let i in cutList){
+            let result = await send(cutList[i]);
+            console.log(result)
+        }
+        await value[0].update({value: cutList.slice(-1)[0]});
+        return 'OK'
+    }else{
+        console.log('Not List')
+    }
+
+}
+
+module.exports.startanother = startAnother;
+module.exports.start = start;
 module.exports.send = sendArticle;
 module.exports.token = generateToken;
 module.exports.date = getDateTime;

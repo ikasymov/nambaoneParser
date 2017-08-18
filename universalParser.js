@@ -5,10 +5,10 @@ let fs = require('fs');
 let Xray = require('x-ray');
 let x = Xray();
 
-function Parser(data){
+function Parser(data, site){
     this.bodyPath1 = data.bodyPath1;
     this.bodyPath2 = data.bodyPath2;
-    this.site = data.site;
+    this.site = site
     this.imgPath1 = data.imgPath1;
     this.imgPath2 = data.imgPath2;
     this.group = data.group;
@@ -20,8 +20,8 @@ Parser.prototype._generateToken = async function(){
         url: nambaone + '/users/auth',
         method: 'POST',
         body: {
-            'phone': process.env.user,
-            'password': process.env.password
+            'phone': '996121121121',
+            'password': 'password112'
         },
         json: true
     };
