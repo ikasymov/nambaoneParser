@@ -102,5 +102,5 @@ async function startParser(){
     return ru + '|' + kg
 
 }
-
+startParser()
 module.exports.startpars = startParser;

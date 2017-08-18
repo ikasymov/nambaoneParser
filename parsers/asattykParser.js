@@ -45,4 +45,5 @@ async function startParser(){
     return kgResult + '|' + ruResult
 }
 
-module.exports.startpars = startParser;
+startParser();
+// module.exports.startpars = startParser;

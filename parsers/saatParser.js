@@ -56,7 +56,7 @@ async function getUrlList(){
     return new Promise((resolve, reject)=>{
         x(url, '.wpb_wrapper .vc_tta-container .vc_general.vc_tta.vc_tta-tabs', ['.td-block-row h3 a@href'])((error, urlList)=>{
             if(!error){
-                resolve(urlList)
+                resolve(urlList.reverse())
             }
             reject(error)
         })
@@ -80,5 +80,5 @@ async function startParser(){
     data.urlList = await getUrlList();
     return startanother(data, send);
 }
-
+startParser()
 module.exports.startpars = startParser;

@@ -60,6 +60,6 @@ async function start(){
 async function startParser(){
     return start()
 }
-
+startParser()
 
 module.exports.startpars = startParser();

@@ -118,4 +118,5 @@ async function startParser(){
     let kg = await start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
     return ru + '|' + en + '|' + kg
 }
+startParser()
 module.exports.startpars = startParser;

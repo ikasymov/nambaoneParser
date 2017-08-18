@@ -47,5 +47,5 @@ async function startParser(){
     data.urlList = await getUrlList();
     return start(data);
 }
-
+startParser()
 module.exports.startpars = startParser;

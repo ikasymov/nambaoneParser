@@ -71,5 +71,5 @@ async function startParser(){
     return startanother(data, send);
 }
 
-
+startParser()
 module.exports.startpars = startParser;
