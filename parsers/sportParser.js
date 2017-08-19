@@ -29,5 +29,6 @@ async function startParser(){
     data.urlList = await getUrlList();
     return start(data);
 }
-startParser()
-
+startParser().then(result=>{
+    process.exit();
+})

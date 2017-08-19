@@ -34,16 +34,24 @@ async function getUrlList(url){
 
 
 async function startParser(){
-    let rusUrl = 'https://rus.azattyk.org/z/4795';
-    let kgUrl = 'https://www.azattyk.org/z/828';
-    let ruUrls = await getUrlList(rusUrl);
-    let kgUrls = await getUrlList(kgUrl);
-    dataRU.urlList = ruUrls;
-    dataKG.urlList = kgUrls;
-    let kgResult = await start(dataKG);
-    let ruResult = await start(dataRU);
-    return kgResult + '|' + ruResult
+    try{
+        let rusUrl = 'https://rus.azattyk.org/z/4795';
+        let kgUrl = 'https://www.azattyk.org/z/828';
+        let ruUrls = await getUrlList(rusUrl);
+        let kgUrls = await getUrlList(kgUrl);
+        dataRU.urlList = ruUrls;
+        dataKG.urlList = kgUrls;
+        let kgResult = await start(dataKG);
+        let ruResult = await start(dataRU);
+        return kgResult + '|' + ruResult
+    }catch(e){
+        return e
+    }
+
 }
 
-startParser();
-// module.exports.startpars = startParser;
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+});

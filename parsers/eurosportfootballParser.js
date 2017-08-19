@@ -13,7 +13,12 @@ let data = {
 };
 
 Parser.prototype.getListOfUrls = async function(){
-    let html = await this.getArticleHtml();
+    let html = false;
+    try{
+        html = await this.getArticleHtml();
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
             if(!error){
@@ -39,7 +44,16 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+    try{
+        data.urlList = await getUrlList();
+        return start(data);
+    }catch(e){
+        return e
+    }
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+})
+

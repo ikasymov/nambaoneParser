@@ -1,12 +1,8 @@
 let parser = require('../parser');
 let Xray = require('x-ray');
 let x = Xray();
-let xpath = require('xpath')
-    , dom = require('xmldom').DOMParser;
 let request = require('request');
 let scrape = require('html-metadata');
-let ch = require('cheerio');
-let db = require('../models');
 let startanother = require('../parser').startanother;
 
 async function getArticleBody(url){
@@ -33,8 +29,12 @@ async function getArticleTheme(url){
 }
 
 async function getArticleImages(url){
-    let dict = await scrape(url);
-    return await parser.getImageToken(dict.twitter.image.src)
+    try{
+        let dict = await scrape(url);
+        return await parser.getImageToken(dict.twitter.image.src)
+    }catch(e){
+        return e
+    }
 }
 
 async function getUrlList(){
@@ -67,8 +67,16 @@ let data = {
 
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return startanother(data, send);
+    try{
+        data.urlList = await getUrlList();
+        return startanother(data, send);
+    }catch(e){
+        return e
+    }
 }
 
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+})

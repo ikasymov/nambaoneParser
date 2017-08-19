@@ -24,8 +24,16 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+    try{
+        data.urlList = await getUrlList();
+        return start(data);
+    }catch(e){
+        return e
+    }
 }
 
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+})

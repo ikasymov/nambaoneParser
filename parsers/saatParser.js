@@ -1,10 +1,7 @@
 let parser = require('../parser');
 let Xray = require('x-ray');
 let x = Xray();
-let xpath = require('xpath')
-    , dom = require('xmldom').DOMParser;
 let request = require('request');
-let ch = require('cheerio');
 let startanother = require('../parser').startanother;
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
@@ -21,7 +18,12 @@ async function getArticleHtml(url){
     })
 }
 async function getArticleBody(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, 'article', ['.td-post-content p'])((error, textList)=>{
             resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
@@ -40,7 +42,12 @@ async function getArticleTheme(url){
 }
 
 async function getArticleImages(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, 'article', '.td-post-content .td-post-featured-image img@src')((error, imgList)=>{
             if(!error){
@@ -64,11 +71,15 @@ async function getUrlList(){
 }
 
 async function send(url){
-    let body = await getArticleBody(url);
-    let title = await getArticleTheme(url);
-    let img = await getArticleImages(url);
-    let token = await parser.getImageToken(img);
-    return parser.send(1188, title, body, [token]);
+    try{
+        let body = await getArticleBody(url);
+        let title = await getArticleTheme(url);
+        let img = await getArticleImages(url);
+        let token = await parser.getImageToken(img);
+        return parser.send(1188, title, body, [token]);
+    }catch(e){
+        return e
+    }
 }
 
 let data = {
@@ -80,4 +91,8 @@ async function startParser(){
     data.urlList = await getUrlList();
     return startanother(data, send);
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(error=>{
+    console.log(error)
+})

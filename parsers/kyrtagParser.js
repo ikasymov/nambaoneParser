@@ -19,13 +19,18 @@ async function getArticleHtml(url){
     })
 }
 async function getArticleBody(url){
-    let html = await getArticleHtml(url);
-    let $ = ch.load(html);
-    let contentHtml = $('.content .v-news-detail.inner-news.v-news-detail-page').children()
-    contentHtml.first().remove();
-    contentHtml.remove('.news-tags');
-    let text = $('.content .v-news-detail.inner-news.v-news-detail-page').text()
-    return text.trim().slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url
+    try{
+        let html = await getArticleHtml(url);
+        let $ = ch.load(html);
+        let contentHtml = $('.content .v-news-detail.inner-news.v-news-detail-page').children()
+        contentHtml.first().remove();
+        contentHtml.remove('.news-tags');
+        let text = $('.content .v-news-detail.inner-news.v-news-detail-page').text()
+        return text.trim().slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url
+    }catch(e){
+        return e
+    }
+
 }
 async function getArticleTheme(url){
     return new Promise((resolve, reject)=>{
@@ -39,7 +44,12 @@ async function getArticleTheme(url){
 }
 
 async function getArticleImages(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, '.content', '.v-news-detail.inner-news.v-news-detail-page img@src')((error, imgList)=>{
             if(!error){
@@ -58,12 +68,15 @@ async function getArticleImages(url){
 }
 
 async function send(url, group){
-    let body = await getArticleBody(url);
-    let title = await getArticleTheme(url);
-    let img = await getArticleImages(url);
-    let token = await parser.getImageToken(img);
-    let result = await parser.send(group, title, body, [token]);
-    return result
+    try{
+        let body = await getArticleBody(url);
+        let title = await getArticleTheme(url);
+        let img = await getArticleImages(url);
+        let token = await parser.getImageToken(img);
+        return parser.send(group, title, body, [token]);
+    }catch(e){
+        return e
+    }
 }
 
 async function getUrlList(url, element){
@@ -80,27 +93,32 @@ async function getUrlList(url, element){
 
 
 async function start(dataName, group, url, element){
-    let list = await getUrlList(url, element);
-    let urlList = list.reverse();
-    let value = await db.Parser.findOrCreate({
-        where: {
-            key: dataName
-        },
-        defaults: {
-            key: dataName,
-            value: urlList[0]
+    try{
+        let list = await getUrlList(url, element);
+        let urlList = list.reverse();
+        let value = await db.Parser.findOrCreate({
+            where: {
+                key: dataName
+            },
+            defaults: {
+                key: dataName,
+                value: urlList[0]
+            }
+        });
+        let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+        if(cutList.length > 0){
+            for (let i in cutList){
+                let result = await send(cutList[i], group);
+                console.log(result)
+            }
+            value[0].update({value: cutList.slice(-1)[0]})
+        }else{
+            console.log('Not List')
         }
-    });
-    let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
-    if(cutList.length > 0){
-        for (let i in cutList){
-            let result = await send(cutList[i], group);
-            console.log(result)
-        }
-        value[0].update({value: cutList.slice(-1)[0]})
-    }else{
-        console.log('Not List')
+    }catch(e){
+        return e
     }
+
 
 }
 
@@ -113,9 +131,15 @@ async function startParser(){
     let dataNameRu = 'kyrtag_test_ru';
     let dataNameKG = 'kyrtag_test_kg';
     let dataNameEn = 'kyrtag_test_en';
-    let ru = await start(dataNameRu, 1183, urlForParseUrlsRu, 'h3');
-    let en = await start(dataNameEn, 1185, urlForParseUrlsEn, 'h2');
-    let kg = await start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
-    return ru + '|' + en + '|' + kg
+    try{
+        let ru = await start(dataNameRu, 1183, urlForParseUrlsRu, 'h3');
+        let en = await start(dataNameEn, 1185, urlForParseUrlsEn, 'h2');
+        let kg = await start(dataNameKG, 1184, urlForParseUrlsKG, 'h2');
+        return ru + '|' + en + '|' + kg
+    }catch(e){
+        return e
+    }
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+});

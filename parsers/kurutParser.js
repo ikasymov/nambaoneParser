@@ -18,7 +18,12 @@ async function getArticleHtml(url){
     })
 }
 async function getArticleBody(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, 'article', ['.entry-content'])((error, textList)=>{
             resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
@@ -36,7 +41,12 @@ async function getArticleTheme(url){
     });
 }
 async function getListOfUrls(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, 'article', ['.entry-content img@src'])((error, imgList)=>{
             if(!error){
@@ -48,12 +58,16 @@ async function getListOfUrls(url){
 }
 
 async function getArticleImages(url){
-    let token = [];
-    let urls = await getListOfUrls(url);
-    for(let i in urls){
-        token.push(await parser.getImageToken(urls[i]))
+    try{
+        let token = [];
+        let urls = await getListOfUrls(url);
+        for(let i in urls){
+            token.push(await parser.getImageToken(urls[i]))
+        }
+        return token
+    }catch(e){
+        return e
     }
-    return token
 }
 
 
@@ -70,13 +84,17 @@ async function getUrlList(url){
 
 
 async function send(url){
-    let body = await getArticleBody(url);
-    if(body.trim()){
-        let title = await getArticleTheme(url);
-        let token = await getArticleImages(url);
-        return await parser.send(1190, title, body, token);
-    }else{
-        console.log('not body content')
+    try{
+        let body = await getArticleBody(url);
+        if(body.trim()){
+            let title = await getArticleTheme(url);
+            let token = await getArticleImages(url);
+            return await parser.send(1190, title, body, token);
+        }else{
+            console.log('not body content')
+        }
+    }catch(e){
+        return e
     }
 }
 let urlForParserUrlList = 'http://kurut.kg/';
@@ -86,7 +104,15 @@ let data = {
 };
 
 async function startParser(){
-    data.urlList = await getUrlList(urlForParserUrlList);
-    return startanother(data, send);
+    try{
+        data.urlList = await getUrlList(urlForParserUrlList);
+        return startanother(data, send);
+    }catch(e){
+        return e
+    }
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+});

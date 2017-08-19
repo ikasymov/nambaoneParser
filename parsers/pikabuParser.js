@@ -32,7 +32,12 @@ async function getBinaryHtml(url){
 
 
 Parser.prototype.getArticleTheme = async function(){
-    let html = await getBinaryHtml(this.site);
+    let html = false;
+    try{
+        html = await getBinaryHtml(this.site);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, 'title')((error, title)=>{
             resolve(title)
@@ -40,7 +45,11 @@ Parser.prototype.getArticleTheme = async function(){
     })
 };
 Parser.prototype.getArticleHtml = async function(){
-    return await getBinaryHtml(this.site)
+    try{
+        return await getBinaryHtml(this.site)
+    }catch(e){
+        return e
+    }
 };
 
 Parser.prototype.getArticleBody = async function(){
@@ -49,7 +58,12 @@ Parser.prototype.getArticleBody = async function(){
 
 let url = 'https://pikabu.ru/best';
 async function getUrlList(){
-    let html = await getBinaryHtml(url);
+    let html = false;
+    try{
+        html = await getBinaryHtml(url);
+    }catch(e) {
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, '.inner_wrap .stories', ['.story__main .story__header-title a.story__title-link@href'])((error, urlList)=>{
             if(!error){
@@ -61,8 +75,16 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+    try{
+        data.urlList = await getUrlList();
+        return start(data);
+    }catch(e){
+        return e
+    }
 }
 
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+});

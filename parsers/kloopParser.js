@@ -18,7 +18,12 @@ async function getArticleHtml(url){
     })
 }
 async function getArticleBody(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, '.td-post-content', ['p'])((error, textList)=>{
             resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url)
@@ -37,7 +42,12 @@ async function getArticleTheme(url){
 }
 
 async function getArticleImages(url){
-    let html = await getArticleHtml(url);
+    let html = false;
+    try{
+        html = await getArticleHtml(url);
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, '.td-post-featured-image', 'img@src')((error, imgList)=>{
             if(!error){
@@ -59,47 +69,67 @@ async function getUrlList(url){
 }
 
 async function send(url, group){
-    let body = await getArticleBody(url);
-    let title = await getArticleTheme(url);
-    let img = await getArticleImages(url);
-    let token = await parser.getImageToken(img);
-    return parser.send(group, title, body, [token]);
+    try{
+        let body = await getArticleBody(url);
+        let title = await getArticleTheme(url);
+        let img = await getArticleImages(url);
+        let token = await parser.getImageToken(img);
+        return parser.send(group, title, body, [token]);
+    }catch(e){
+        return e
+    }
+
 }
 
 async function start(dataName, group, url){
-    let list = await getUrlList(url);
-    let urlList = list.reverse();
-    let value = await db.Parser.findOrCreate({
-        where: {
-            key: dataName
-        },
-        defaults: {
-            key: dataName,
-            value: urlList[0]
+    try{
+        let list = await getUrlList(url);
+        let urlList = list.reverse();
+        let value = await db.Parser.findOrCreate({
+            where: {
+                key: dataName
+            },
+            defaults: {
+                key: dataName,
+                value: urlList[0]
+            }
+        });
+        let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
+        if(cutList.length > 0){
+            for(let i in cutList){
+                let elem = cutList[i];
+                let result = await send(elem, group);
+                console.log(result)
+            }
+            await value[0].update({value: cutList.slice(-1)[0]});
+            return 'OK'
+        }else{
+            console.log('Not List')
         }
-    });
-    let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
-    if(cutList.length > 0){
-        for(let i in cutList){
-            let elem = cutList[i];
-            let result = await send(elem, group);
-            console.log(result)
-        }
-        await value[0].update({value: cutList.slice(-1)[0]});
-        return 'OK'
-    }else{
-        console.log('Not List')
+    }catch(e){
+        return e
     }
+
 }
 
 async function startParser(){
-    let urlForParseUrlsRu = 'https://kloop.kg/news/';
-    let urlForParseUrlsKG = 'http://ky.kloop.asia/news/';
-    let dataNameRu = 'kloop_test_ru';
-    let dataNameKG = 'kloop_test_kg';
-    let ru = await start(dataNameRu, 1186, urlForParseUrlsRu);
-    let kg = await start(dataNameKG, 1187, urlForParseUrlsKG);
-    return ru + '|' + kg
+    try{
+        let urlForParseUrlsRu = 'https://kloop.kg/news/';
+        let urlForParseUrlsKG = 'http://ky.kloop.asia/news/';
+        let dataNameRu = 'kloop_test_ru';
+        let dataNameKG = 'kloop_test_kg';
+        let ru = await start(dataNameRu, 1186, urlForParseUrlsRu);
+        let kg = await start(dataNameKG, 1187, urlForParseUrlsKG);
+        return ru + '|' + kg
+    }catch(e){
+        return e
+    }
+
 
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e);
+    process.exit()
+})

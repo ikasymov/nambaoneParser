@@ -60,4 +60,6 @@ async function start(){
 async function startParser(){
     return start()
 }
-startParser();
+startParser().then(result=>{
+    process.exit();
+})

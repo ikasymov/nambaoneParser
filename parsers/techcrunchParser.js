@@ -13,17 +13,29 @@ let data = {
 };
 
 Parser.prototype.getArticleImages = async function () {
+    console.log('get article images')
     let token = [];
-    let urls = await this.getListOfUrls();
-    token.push(await this.saveImageEndReturnToken(urls[0]));
-    return token
+    try{
+        let urls = await this.getListOfUrls();
+        token.push(await this.saveImageEndReturnToken(urls[0]));
+        return token
+    }catch(e){
+        return e
+    }
+
 };
 
 Parser.prototype.getArticleBody = async function(){
-    let html = await this.getArticleHtml();
+    let html = false;
+    try{
+        html = await this.getArticleHtml();
+    }catch(e){
+        return e
+    }
     return new Promise((resolve, reject)=>{
         x(html, this.bodyPath1, this.bodyPath2)((error, textList)=>{
             if(!error){
+                console.log('get article body')
                 resolve(textList.join('\n').slice(0, 155) + '.... To continue, press \n' + this.site)
             }
             reject(error)
@@ -33,6 +45,7 @@ Parser.prototype.getArticleBody = async function(){
 
 let url = 'https://techcrunch.com/';
 async function getUrlList(){
+    console.log('get urls')
     return new Promise((resolve, reject)=>{
         x(url, '.l-main', ['ul li h2 a@href'])((error, urlList)=>{
             if(!error){
@@ -44,7 +57,16 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+    console.log('start parser')
+    try{
+        data.urlList = await getUrlList();
+        return start(data);
+    }catch(e){
+        return e
+    }
 }
-startParser()
+startParser().then(result=>{
+    process.exit();
+}).catch(error=>{
+    console.log(error)
+});
