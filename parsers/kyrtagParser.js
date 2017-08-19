@@ -119,4 +119,3 @@ async function startParser(){
     return ru + '|' + en + '|' + kg
 }
 startParser()
-module.exports.startpars = startParser;

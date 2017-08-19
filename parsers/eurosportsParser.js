@@ -47,4 +47,3 @@ async function startParser(){
     return start(data);
 }
 startParser()
-module.exports.startpars = startParser;

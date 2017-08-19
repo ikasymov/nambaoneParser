@@ -31,4 +31,3 @@ async function startParser(){
 }
 startParser()
 
-module.exports.startpars = startParser;
