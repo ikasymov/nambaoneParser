@@ -6,7 +6,7 @@ let data = {
     site: 'http://www.elle.ru/celebrities/novosty/smi-ravshana-kurkova-vyishla-zamuj/',
     bodyPath1: 'article',
     bodyPath2: ['.post__body.post__body_full .post__text.post__text-html'],
-    imgPath1: '.content',
+    imgPath1: 'article',
     imgPath2: ['img@src'],
     group: 1191,
     dataName: 'habra_test'
