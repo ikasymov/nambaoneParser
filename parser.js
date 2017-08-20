@@ -4,7 +4,23 @@ let superagent = require('superagent');
 let fs = require('fs');
 let db = require('./models');
 let async = require('async');
+let sequelize = require('sequelize')
 let Parser = require('./universalParser');
+let download = require('image-downloader');
+
+function deleteFile(path){
+    return new Promise((resolve, reject)=>{
+        fs.unlink(path, function (error) {
+            if(error){
+                console.log(error);
+                reject(error)
+            }
+            console.log('File deleted');
+            resolve()
+        })
+    });
+}
+
 async function getDateTime() {
 
     let date = new Date();
@@ -83,23 +99,40 @@ async function sendArticle(groupId, title, body, imgList){
 
 
 async function saveImageEndReturnToken(imgUrl){
-    let value = Math.random();
-    return new Promise((resolve, reject)=>{
-        if (imgUrl){
-            request(imgUrl).pipe(fs.createWriteStream('./' + 'kp' +  value + imgUrl.slice(-4))).on('finish', function (error, req) {
-                if (error){
-                    reject(error);
+    console.log('save image and return token')
+    let format = imgUrl.match(/\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi)[0];
+    imgUrl = imgUrl.split('.').slice(0, -1).join('.') + format;
+    return new Promise((resolve, reject)=> {
+        const options = {
+            url: imgUrl,
+            dest: './'
+        };
+        download.image(options).then(({filename, image}) => {
+            let file = './'+ filename;
+            console.log('download image');
+            superagent.post('https://files.namba1.co').attach('file', file).end(function(err, req) {
+                console.log('send image');
+                if(err){
+                    console.log(err);
+                    deleteFile(filename);
+                    reject(err)
                 }
-                superagent.post('https://files.namba1.co').attach('file', './' + 'kp' +  value + imgUrl.slice(-4)).end(function(err, req) {
-                    fs.unlink('./' + 'kp' +  value + imgUrl.slice(-4), function (error, value) {});
-                    resolve(req.body.file);
-                });
-            });
-        }
-        else{
-            resolve(imgUrl)
-        }
-    });
+                deleteFile(file).then(result=>{
+                    resolve(req.body.file)
+                }).catch(error=>{
+                    console.log(error);
+                    reject(error)
+                })
+            })
+        }).catch(e => {
+            console.log(e);
+            console.log('error download image');
+            reject(e)
+        })
+        setTimeout(()=>{
+            reject(new Error('time out'))
+        }, 10000)
+    })
 }
 
 async function start(data){
@@ -121,8 +154,13 @@ async function start(data){
         if(cutList.length > 0){
             for (let  i in cutList){
                 let siteParser = new Parser(data, cutList[i]);
-                let result = await siteParser.send();
-                console.log(result)
+                try{
+                    let result = await siteParser.send();
+                    console.log(result)
+                }catch(e){
+                    console.log(e);
+                    return
+                }
             }
             cutList.forEach((elem)=>{
 
@@ -152,11 +190,13 @@ async function startAnother(data, send){
     let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
     if(cutList.length > 0){
         for (let i in cutList){
-            let result = await send(cutList[i]);
-            console.log(result)
+            await send(cutList[i]).then(result=>{
+                console.log(result)
+            })
         }
         await value[0].update({value: cutList.slice(-1)[0]});
         return 'OK'
+
     }else{
         console.log('Not List')
     }

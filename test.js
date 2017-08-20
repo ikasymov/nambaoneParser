@@ -37,9 +37,9 @@ let async  = require('async');
 //     console.log(result)
 // })
 db.Parser.findOne({where: {
-    key: 'habra_test'
+    key: 'imndeit_test'
 }}).then(parser=>{
-    parser.update({value: 'https://habrahabr.ru/company/spbau/blog/335884/'})
+    parser.update({value: 'http://lmndeit.kg/2017/05/13/karpou/'})
 })
 
 // db.Parser.findOne({where: {
