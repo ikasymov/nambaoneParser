@@ -7,6 +7,7 @@ let async = require('async');
 let sequelize = require('sequelize')
 let Parser = require('./universalParser');
 let download = require('image-downloader');
+let config = require('./config');
 
 function deleteFile(path){
     return new Promise((resolve, reject)=>{
@@ -51,8 +52,8 @@ async function generateToken(){
         url: nambaone + '/users/auth',
         method: 'POST',
         body: {
-            'phone': '996121121121',
-            'password': 'password112'
+            'phone': config.user,
+            'password': config.password
         },
         json: true
     };

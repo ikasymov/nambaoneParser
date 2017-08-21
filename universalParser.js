@@ -6,6 +6,7 @@ let Xray = require('x-ray');
 let x = Xray();
 let path = require('path');
 let download = require('image-downloader');
+let config = require('./config');
 function Parser(data, site){
     this.bodyPath1 = data.bodyPath1;
     this.bodyPath2 = data.bodyPath2;
@@ -22,8 +23,8 @@ Parser.prototype._generateToken = async function(){
         url: nambaone + '/users/auth',
         method: 'POST',
         body: {
-            'phone': '996121121121',
-            'password': 'password112'
+            'phone': config.user,
+            'password': config.password
         },
         json: true
     };
