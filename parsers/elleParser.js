@@ -1,4 +1,3 @@
-let Parser = require('../universalParser');
 let Xray = require('x-ray');
 let x = Xray();
 let db = require('../models');
@@ -30,12 +29,12 @@ async function startParser(){
         data.urlList = await getUrlList();
         return start(data);
     }catch(e){
-        return e
+        throw e
     }
 }
 startParser().then(result=>{
     process.exit();
 }).catch(e=>{
     console.log(e)
-})
+});
 // module.exports.startpars = startParser;

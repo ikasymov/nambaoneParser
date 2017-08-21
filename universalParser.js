@@ -102,7 +102,7 @@ Parser.prototype.getArticleBody = async function(){
         x(html, this.bodyPath1, this.bodyPath2)((error, textList)=>{
             if(!error && textList.length > 0){
                 console.log('get article body')
-                resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + this.site)
+                resolve(textList.join('\n').slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n\n' + this.site)
             }
             reject(error || 'not body')
         })
