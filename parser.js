@@ -158,13 +158,9 @@ async function start(data){
                     let result = await siteParser.send();
                     console.log(result)
                 }catch(e){
-                    console.log(e);
-                    return
+                    continue
                 }
             }
-            cutList.forEach((elem)=>{
-
-            });
             await value[0].update({value: cutList.slice(-1)[0]});
             return 'OK'
         }else{
@@ -190,9 +186,13 @@ async function startAnother(data, send){
     let cutList = urlList.slice(urlList.indexOf(value[0].value) + 1);
     if(cutList.length > 0){
         for (let i in cutList){
-            await send(cutList[i]).then(result=>{
-                console.log(result)
-            })
+            try{
+                await send(cutList[i]).then(result=>{
+                    console.log(result)
+                })
+            }catch(e){
+                continue
+            }
         }
         await value[0].update({value: cutList.slice(-1)[0]});
         return 'OK'
