@@ -96,7 +96,7 @@ Parser.prototype.getArticleBody = async function(){
     try{
         html = await this.getArticleHtml();
     }catch(e){
-        return e
+         throw e
     }
     return new Promise((resolve, reject)=>{
         x(html, this.bodyPath1, this.bodyPath2)((error, textList)=>{
@@ -125,7 +125,7 @@ Parser.prototype.getListOfUrls = async function(){
     try{
         html = await this.getArticleHtml();
     }catch(e){
-        return e
+        throw e
     }
     return new Promise((resolve, reject)=>{
         x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
@@ -199,7 +199,7 @@ Parser.prototype.send = async function(){
         let token = await this.getArticleImages();
         return await this.sendArticle(body, title, token);
     }catch(e){
-        return e
+        throw e
     }
 
 };
@@ -214,7 +214,7 @@ Parser.prototype.getArticleImages = async function(){
         }
         return token
     }catch(e){
-        return e
+        throw e
     }
 
 };
