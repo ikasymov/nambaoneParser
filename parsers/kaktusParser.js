@@ -42,7 +42,7 @@ async function getUrlList(){
     return new Promise((resolve, reject)=>{
         x('http://kaktus.media/?date=' + date + '&lable=8&order=time', '.block_content .cat_content ul ', ['li .t a@href'])((error, urlList)=>{
             if(!error){
-                resolve(urlList.reverse())
+                resolve(urlList)
             }
             reject(error)
         })
