@@ -40,7 +40,7 @@ Parser.prototype.getArticleTheme = async function(){
     }
     return new Promise((resolve, reject)=>{
         x(html, 'title')((error, title)=>{
-            resolve(title + '\n\n')
+            resolve(title + '\n' + this.site)
         })
     })
 };

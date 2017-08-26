@@ -68,13 +68,13 @@ async function generateToken(){
 }
 
 
-async function sendArticle(groupId, title, body, imgList){
+async function sendArticle(groupId, title){
     let token = await generateToken();
     let dataForSend = {
         url:  nambaone + '/groups/' + groupId +'/post',
         method: 'POST',
         body: {
-            content: title + '\r\n\r\n' + body,
+            content: title,
             comment_enabled: 1
         },
         headers: {
@@ -82,12 +82,7 @@ async function sendArticle(groupId, title, body, imgList){
         },
         json: true
     };
-    if(imgList.length > 0){
-        dataForSend.body['attachments'] = [];
-        for(let i in imgList){
-            dataForSend.body.attachments.push({type: 'media/image', content: imgList[i]})
-        };
-    }
+
     return new Promise((resolve, reject)=>{
         request(dataForSend, (error, req, body)=>{
             if(error || req.statusCode === 404){

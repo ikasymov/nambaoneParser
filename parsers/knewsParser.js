@@ -34,7 +34,7 @@ async function getArticleTheme(url){
     return new Promise((resolve, reject)=>{
         x(url, 'title')((error, title)=>{
             if(!error){
-                resolve(title)
+                resolve(title + '\n' + url)
             }
             reject(error)
         })
@@ -72,11 +72,8 @@ async function getUrlList(){
 
 async function send(url){
     try{
-        let body = await getArticleBody(url);
         let title = await getArticleTheme(url);
-        let img = await getArticleImages(url);
-        let token = await parser.getImageToken(img);
-        return await parser.send(1189, title, body, [token]);
+        return await parser.send(1189, title);
     }catch(e){
         return e
     }

@@ -38,7 +38,7 @@ Parser.prototype._generateToken = async function(){
     })
 };
 
-Parser.prototype.sendArticle = async function(body, title, imgList){
+Parser.prototype.sendArticle = async function(title){
     console.log('send article')
     let token = false;
     try{
@@ -50,7 +50,7 @@ Parser.prototype.sendArticle = async function(body, title, imgList){
         url:  nambaone + '/groups/' + this.group +'/post',
         method: 'POST',
         body: {
-            content: title + '\r\n\r\n' + body,
+            content: title,
             comment_enabled: 1
         },
         headers: {
@@ -58,12 +58,6 @@ Parser.prototype.sendArticle = async function(body, title, imgList){
         },
         json: true
     };
-    if(imgList.length > 0){
-        dataForSend.body['attachments'] = [];
-        for(let i in imgList){
-            dataForSend.body.attachments.push({type: 'media/image', content: imgList[i]})
-        };
-    }
     return new Promise((resolve, reject)=>{
         request(dataForSend, (error, req, body)=>{
             if(error || req.statusCode === 404){
@@ -72,7 +66,7 @@ Parser.prototype.sendArticle = async function(body, title, imgList){
             resolve(req.statusCode);
         });
     });
-}
+};
 
 
 Parser.prototype.getArticleHtml = async function(){
@@ -113,7 +107,7 @@ Parser.prototype.getArticleTheme = async function(){
     return new Promise((resolve, reject)=>{
         x(this.site, 'title')((error, title)=>{
             if(!error){
-                resolve(title)
+                resolve(title + '\n' + this.site)
             }
             reject(error)
         })
@@ -194,10 +188,8 @@ Parser.prototype.saveImageEndReturnToken = async function(imgUrl){
 Parser.prototype.send = async function(){
     console.log('send')
     try{
-        let body = await this.getArticleBody();
         let title = await this.getArticleTheme();
-        let token = await this.getArticleImages();
-        return await this.sendArticle(body, title, token);
+        return await this.sendArticle(title);
     }catch(e){
         throw e
     }
