@@ -62,4 +62,6 @@ async function startParser(){
 }
 startParser().then(result=>{
     process.exit();
-})
+}).catch(error=>{
+    process.exit()
+});
