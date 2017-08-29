@@ -106,8 +106,8 @@ Parser.prototype.getArticleBody = async function(){
 Parser.prototype.getArticleTheme = async function(){
     return new Promise((resolve, reject)=>{
         x(this.site, 'title')((error, title)=>{
-            if(error || title === 'Страница не найдено'){
-                reject(error || new Error('Страница не найдено'))
+            if(error || title === 'Страница не найдена'){
+                reject(error || new Error('Страница не найдена'))
             }
             resolve(title + '\n' + this.site);
         })
