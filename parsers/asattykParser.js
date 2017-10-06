@@ -1,6 +1,10 @@
 let Xray = require('x-ray');
 let x = Xray();
 let start = require('../parser').start;
+let Handler = require('../handlerStep');
+let send = require('../send');
+let ruGroup = 1679;
+let kgGroup = 1679;
 
 let dataRU = {
     site: 'http://www.elle.ru/celebrities/novosty/smi-ravshana-kurkova-vyishla-zamuj/',
@@ -41,9 +45,17 @@ async function startParser(){
         let kgUrls = await getUrlList(kgUrl);
         dataRU.urlList = ruUrls;
         dataKG.urlList = kgUrls;
-        let kgResult = await start(dataKG);
-        let ruResult = await start(dataRU);
-        return kgResult + '|' + ruResult
+        let ru = new Handler(ruUrls, 'azattyk_ru');
+        let kg = new Handler(kgUrls, 'azattyk_kg');
+        let rurl = await ru.getUrl();
+        let kurl = await kg.getUrl();
+        if(rurl){
+            await send(rurl, ruGroup)
+        }
+        if(kurl){
+            await send(kurl, kgGroup)
+        }
+        return false
     }catch(e){
         return e
     }
@@ -51,6 +63,7 @@ async function startParser(){
 }
 
 startParser().then(result=>{
+    console.log(result)
     process.exit();
 }).catch(e=>{
     console.log(e)
