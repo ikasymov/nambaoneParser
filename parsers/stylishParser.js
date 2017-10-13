@@ -2,6 +2,8 @@ let Parser = require('../universalParser');
 let start = require('../parser').start;
 let Xray = require('x-ray');
 let x = Xray();
+let Handler = require('../handlerStep');
+let send = require('../send');
 let data = {
     site: 'http://stylish.kg/blog/planeta-obezyan-voyna',
     bodyPath1: '.content',
@@ -35,8 +37,17 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'stylish');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1198)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
 }
 startParser().then(result=>{
     process.exit()

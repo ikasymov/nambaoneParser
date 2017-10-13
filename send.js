@@ -6,6 +6,13 @@ let config = require('./config');
 
 module.exports = function(url, group){
   return new Promise((resolve, reject)=>{
+    if(!group){
+      x(url.html, 'title')((error, title)=>{
+        sendArticle(title + '\n\n' + url.url, url.group).then(result=>{
+          resolve(result)
+        })
+      })
+    }
     x(url, 'title')((error, title)=>{
       sendArticle(title + '\n\n' + url, group).then(result=>{
         resolve(result)

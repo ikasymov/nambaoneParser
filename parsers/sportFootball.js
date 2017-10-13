@@ -2,6 +2,8 @@ let Parser = require('../universalParser');
 let db = require('../models');
 let Xray = require('x-ray');
 let x = Xray();
+let Handler = require('../handlerStep');
+let send = require('../send');
 let data = {
     site: 'https://www.sports.ru/football/1054674857.html',
     bodyPath1: 'article',
@@ -57,8 +59,19 @@ async function start(){
     }
 
 }
+
 async function startParser(){
-    return start()
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'sportFootball2');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1197)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
 }
 startParser().then(result=>{
     process.exit();

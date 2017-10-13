@@ -2,6 +2,8 @@ let Parser = require('../universalParser');
 let start = require('../parser').start;
 let Xray = require('x-ray');
 let x = Xray();
+let Handler = require('../handlerStep');
+let send = require('../send');
 
 let data = {
     site: 'http://www.elle.ru/celebrities/novosty/smi-ravshana-kurkova-vyishla-zamuj/',
@@ -24,15 +26,18 @@ async function getUrlList(){
         })
     })
 }
-
 async function startParser(){
-    try{
-        data.urlList = await getUrlList();
-        return start(data);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'lmndeit');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1182)
     }
-
+    return true
+  }catch(e){
+    throw e
+  }
 }
 startParser().then(result=>{
     process.exit();

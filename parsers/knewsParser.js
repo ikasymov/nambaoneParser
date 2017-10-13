@@ -3,6 +3,10 @@ let Xray = require('x-ray');
 let x = Xray();
 let request = require('request');
 let startanother = require('../parser').startanother;
+
+let Handler = require('../handlerStep');
+let send = require('../send');
+
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
         let data = {
@@ -70,28 +74,35 @@ async function getUrlList(){
 }
 
 
-async function send(url){
-    try{
-        let title = await getArticleTheme(url);
-        return await parser.send(1189, title);
-    }catch(e){
-        return e
-    }
-}
+// async function send(url){
+//     try{
+//         let title = await getArticleTheme(url);
+//         return await parser.send(1189, title);
+//     }catch(e){
+//         return e
+//     }
+// }
+//
+// let data = {
+//     dataName: 'knews_test'
+// };
 
-let data = {
-    dataName: 'knews_test'
-};
 
 
 async function startParser(){
-    try{
-        data.urlList = await getUrlList();
-        return startanother(data, send);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'knews');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1189)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
+
 startParser().then(result=>{
     process.exit()
 }).catch(error=>{

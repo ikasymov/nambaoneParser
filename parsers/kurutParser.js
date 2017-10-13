@@ -3,6 +3,10 @@ let Xray = require('x-ray');
 let x = Xray();
 let request = require('request');
 let startanother = require('../parser').startanother;
+
+let Handler = require('../handlerStep');
+let send = require('../send');
+
 async function getArticleHtml(url){
     return new Promise((resolve, reject)=>{
         let data = {
@@ -73,7 +77,7 @@ async function getArticleImages(url){
 
 async function getUrlList(url){
     return new Promise((resolve, reject)=>{
-        x(url, '#main .home_page ul', ['li .home-post-title a@href'])((error, urlList)=>{
+        x('http://kurut.kg/', '#main .home_page ul', ['li .home-post-title a@href'])((error, urlList)=>{
             if(!error){
                 resolve(urlList)
             }
@@ -83,32 +87,39 @@ async function getUrlList(url){
 }
 
 
-async function send(url){
-    try{
-        let title = await getArticleTheme(url);
-        if(title.trim()){
-            return await parser.send(1190, title);
-        }else{
-            console.log('not body content')
-        }
-    }catch(e){
-        return e
-    }
-}
-let urlForParserUrlList = 'http://kurut.kg/';
+// async function send(url){
+//     try{
+//         let title = await getArticleTheme(url);
+//         if(title.trim()){
+//             return await parser.send(1190, title);
+//         }else{
+//             console.log('not body content')
+//         }
+//     }catch(e){
+//         return e
+//     }
+// }
+// let urlForParserUrlList = '';
+//
+// let data = {
+//     dataName: 'kurut_test'
+// };
 
-let data = {
-    dataName: 'kurut_test'
-};
 
 async function startParser(){
-    try{
-        data.urlList = await getUrlList(urlForParserUrlList);
-        return startanother(data, send);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'kurut');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1190)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
+
 startParser().then(result=>{
     process.exit();
 }).catch(e=>{

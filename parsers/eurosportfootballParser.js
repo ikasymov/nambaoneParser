@@ -2,33 +2,36 @@ let Parser = require('../universalParser');
 let Xray = require('x-ray');
 let x = Xray();
 let start = require('../parser').start;
-let data = {
-    site: 'http://www.eurosport.ru/football/italian-super-coppa/2017-2018/story_sto6288204.shtml',
-    bodyPath1: '.storyfull__content',
-    bodyPath2: ['.storyfull__paragraphs p'],
-    imgPath1: 'head',
-    imgPath2: 'script',
-    group: 1195,
-    dataName: 'eurosport_football_test'
-};
+let Handler = require('../handlerStep');
+let send = require('../send');
 
-Parser.prototype.getListOfUrls = async function(){
-    let html = false;
-    try{
-        html = await this.getArticleHtml();
-    }catch(e){
-        return e
-    }
-    return new Promise((resolve, reject)=>{
-        x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
-            if(!error){
-                let imgJson = JSON.parse(imgList);
-                resolve([imgJson.image.url])
-            }
-            reject(error)
-        })
-    });
-};
+// let data = {
+//     site: 'http://www.eurosport.ru/football/italian-super-coppa/2017-2018/story_sto6288204.shtml',
+//     bodyPath1: '.storyfull__content',
+//     bodyPath2: ['.storyfull__paragraphs p'],
+//     imgPath1: 'head',
+//     imgPath2: 'script',
+//     group: 1195,
+//     dataName: 'eurosport_football_test'
+// };
+//
+// Parser.prototype.getListOfUrls = async function(){
+//     let html = false;
+//     try{
+//         html = await this.getArticleHtml();
+//     }catch(e){
+//         return e
+//     }
+//     return new Promise((resolve, reject)=>{
+//         x(html, this.imgPath1, this.imgPath2)((error, imgList)=>{
+//             if(!error){
+//                 let imgJson = JSON.parse(imgList);
+//                 resolve([imgJson.image.url])
+//             }
+//             reject(error)
+//         })
+//     });
+// };
 
 
 let url = 'http://www.eurosport.ru/football';
@@ -43,14 +46,21 @@ async function getUrlList(){
     })
 }
 
+
 async function startParser(){
-    try{
-        data.urlList = await getUrlList();
-        return start(data);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'eurosportfootball');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1195)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
+
 startParser().then(result=>{
     process.exit();
 }).catch(e=>{

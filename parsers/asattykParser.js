@@ -55,7 +55,7 @@ async function startParser(){
         if(kurl){
             await send(kurl, kgGroup)
         }
-        return false
+        return true
     }catch(e){
         return e
     }

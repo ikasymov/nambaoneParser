@@ -2,6 +2,9 @@ let Parser = require('../universalParser');
 let start = require('../parser').start;
 let Xray = require('x-ray');
 let x = Xray();
+let Handler = require('../handlerStep');
+let send = require('../send');
+
 let data = {
     site: 'https://www.sports.ru/tribuna/blogs/thesteal/1368410.html',
     bodyPath1: 'article',
@@ -25,10 +28,21 @@ async function getUrlList(){
 }
 
 
+
 async function startParser(){
-    data.urlList = await getUrlList();
-    return start(data);
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'sports');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1196)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
 }
+
 startParser().then(result=>{
     process.exit();
 })

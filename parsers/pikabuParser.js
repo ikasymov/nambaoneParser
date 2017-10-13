@@ -4,6 +4,9 @@ let iconv = require('iconv-lite');
 let x = Xray();
 let request = require('request');
 let start = require('../parser').start;
+let Handler = require('../handlerStep');
+let send = require('../send');
+
 let data = {
     site: 'https://pikabu.ru/story/semya_vekhala_v_kuplennyiy_dom_i_nashla_v_chulane_potaynuyu_dvertsu_a_za_ney_nastoyashchee_sokrovishche_5264331',
     bodyPath1: '.post-text',
@@ -22,6 +25,7 @@ async function getBinaryHtml(url){
             encoding: 'binary'
         };
         request(data, (error, req, body)=>{
+            console.log(req.title)
             if(!error){
                 resolve(iconv.decode(body, 'win1251'))
             }
@@ -75,12 +79,19 @@ async function getUrlList(){
 }
 
 async function startParser(){
-    try{
-        data.urlList = await getUrlList();
-        return start(data);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'pikabu');
+    let url = await handler.getUrl();
+    if(url){
+      let html = await getBinaryHtml(url);
+      
+      await send({url: url, html: html, group: 1679}, false)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
 
 startParser().then(result=>{

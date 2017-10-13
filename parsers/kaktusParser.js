@@ -5,6 +5,9 @@ let request = require('request');
 let scrape = require('html-metadata');
 let startanother = require('../parser').startanother;
 
+let Handler = require('../handlerStep');
+let send = require('../send');
+
 async function getArticleBody(url){
     return new Promise((resolve, reject)=>{
         x(url, '#topic', ['.topic-text p'])((error, textList)=>{
@@ -50,29 +53,33 @@ async function getUrlList(){
 }
 
 
-async function send(url){
-    try{
-        let title = await getArticleTheme(url);
-        return parser.send(1179, title);
-    }catch(e){
-        console.log(e)
-    }
-
-}
-let data = {
-    dataName: 'kaktus_test'
-};
+// async function send(url){
+//     try{
+//         let title = await getArticleTheme(url);
+//         return parser.send(1179, title);
+//     }catch(e){
+//         console.log(e)
+//     }
+//
+// }
+// let data = {
+//     dataName: 'kaktus_test'
+// };
 
 
 async function startParser(){
-    try{
-        data.urlList = await getUrlList();
-        return startanother(data, send);
-    }catch(e){
-        return e
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'kaktus');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1179)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
-
 startParser().then(result=>{
     process.exit();
 }).catch(e=>{
